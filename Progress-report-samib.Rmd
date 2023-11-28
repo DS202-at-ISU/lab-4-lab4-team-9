@@ -1,0 +1,47 @@
+---
+title: "Progress Report"
+author: "Sami Bensellam"
+date: "2022-11-17"
+output: html_document
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(readr)
+library(rvest)
+library(dplyr)
+library(Lahman)
+library(stringr)
+```
+
+```{r setup, include=FALSE}
+url <- "https://www.baseball-reference.com/awards/hof_2023.shtml"
+html <- read_html(url)
+tables <- html_table(html)
+hall_of_fame_data <- tables[[1]] 
+```
+
+```{r}
+cleaned_data <- hall_of_fame_data %>%
+  mutate(
+    yearID = 2023,
+    playerID = tolower(gsub("(.{5}).*", "\\1", str_replace_all(Name, " ", ""))), # Advanced transformation
+    votedBy = "BBWAA", # Assuming all are voted by BBWAA for this example
+    ballots = NA, # Placeholder, actual value needed
+    needed = NA, # Placeholder, actual value needed
+    votes = parse_number(Votes), # Extract numeric value from Votes
+    inducted = ifelse(parse_number(`%vote`) >= 75, "Y", "N"), # Assuming 75% as threshold
+    category = ifelse(grepl("\\*", `Pos Summary`), "Player", "Other"), # Conditional based on position summary
+    needed_note = NA # Placeholder, actual value needed
+  )
+```
+
+```{r}
+final_dataset <- rbind(HallOfFame, cleaned_data)
+```
+
+```{r}
+write.csv(final_dataset, "HallOfFame.csv", row.names = FALSE)
+```
